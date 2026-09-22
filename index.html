@@ -1090,8 +1090,8 @@ table.tbl td.mono { font-family: var(--mono); font-size: 11.5px; }
       <div class="search">
         <svg class="search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
         <input type="search" class="search__input" id="q" placeholder="Название, артикул или штрихкод" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
-        <button type="button" class="search__scan" id="qScan" aria-label="Сканировать штрихкод" hidden="">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></svg>
+        <button type="button" class="search__scan" id="qScan" aria-label="Сканировать штрихкод" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>
         </button>
         <button type="button" class="search__clear" id="qClear" aria-label="Очистить">✕</button>
       </div>
@@ -1117,7 +1117,7 @@ table.tbl td.mono { font-family: var(--mono); font-size: 11.5px; }
         <button type="button" class="rtab" data-rtab="dead">Залежи</button>
         <button type="button" class="rtab" data-rtab="over">Затоваривание</button>
       </div>
-      <div class="rwin" id="rwin" hidden="">
+      <div class="rwin" id="rwin" hidden>
         <div class="rwin__row">
           <span class="rwin__l">Продажи с</span>
           <input type="date" class="rwin__d" id="winFrom">
@@ -1319,12 +1319,12 @@ table.tbl td.mono { font-family: var(--mono); font-size: 11.5px; }
     </section>
   </main>
 
-  <div class="scan" id="scanBox" hidden="">
-    <video id="scanVideo" playsinline="" muted=""></video>
+  <div class="scan" id="scanBox" hidden>
+    <video id="scanVideo" playsinline muted></video>
     <div class="scan__frame"></div>
     <div class="scan__hint" id="scanHint">Наведите камеру на штрихкод</div>
     <div class="scan__info" id="scanInfo"></div>
-    <button type="button" class="btn btn--ghost scan__torch" id="scanTorch" aria-pressed="false" hidden="">Фонарик</button>
+    <button type="button" class="btn btn--ghost scan__torch" id="scanTorch" aria-pressed="false" hidden>Фонарик</button>
     <button type="button" class="btn btn--ghost scan__close" id="scanClose">Закрыть</button>
   </div>
 
@@ -2991,6 +2991,13 @@ function matchRows(qStr) {
         out.push(row);
         continue;
       }
+      /* и точное совпадение артикула: «00970» — это шайба, а не всё,
+         где встречаются эти цифры (в чужих штрихкодах, в названиях) */
+      if (terms.length === 1 && row.p.article && String(row.p.article).trim().toLowerCase().replace(/ё/g, 'е') === q) {
+        row._r = -1;
+        out.push(row);
+        continue;
+      }
       var hay = row.hay, ok = true;
       for (var t = 0; t < terms.length; t++) if (hay.indexOf(terms[t]) < 0) { ok = false; break; }
       if (!ok) continue;
@@ -3002,8 +3009,8 @@ function matchRows(qStr) {
     out.push(row);
   }
 
-  /* если код нашёлся точно — показываем только его, без похожих */
-  if (isCode) {
+  /* если код или артикул нашёлся точно — показываем только его, без похожих */
+  if (terms.length === 1) {
     var exact = out.filter(function (x) { return x._r === -1; });
     if (exact.length) out = exact;
   }
@@ -3606,7 +3613,7 @@ function renderSettings() {
     '</div>';
 
   $('aboutText').innerHTML =
-    '<strong>Версия от 09.09.2026 14:31.</strong> Если на телефоне дата другая — страница взята из памяти браузера, потяните её вниз.<br><br>' +
+    '<strong>Версия от 22.09.2026 11:34.</strong> Если на телефоне дата другая — страница взята из памяти браузера, потяните её вниз.<br><br>' +
     'Источник данных, обработка и интерфейс разделены. Сейчас данные приходят из Excel-выгрузок 1С:УТ; ' +
     'при переходе на OData меняется только слой источника — справочник товаров, снимки по датам и экраны остаются прежними.<br><br>' +
     'Ключ товара — GUID номенклатуры 1С. Артикул хранится отдельным полем и используется для поиска. ' +
@@ -4415,7 +4422,7 @@ function refreshAll() {
   renderSettings();
 }
 
-var BUILD_STAMP = '09.09.2026 14:31';
+var BUILD_STAMP = '22.09.2026 11:34';
 
 var localNoticeShown = false;
 
